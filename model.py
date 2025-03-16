@@ -300,19 +300,23 @@ class NNUE(pl.LightningModule):
     offset = 270
 
     scorenet = self(us, them, white_indices, white_values, black_indices, black_values, psqt_indices, layer_stack_indices) * self.nnue2score
-    q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
-    qm = (-scorenet - offset) / in_scaling  # used to compute the chance of a loss
-    qf = 0.5 * (1.0 + q.sigmoid() - qm.sigmoid())  # estimated match result (using win, loss and draw probs).
+    qf = scorenet
 
-    p  = ( score - offset) / out_scaling
-    pm = (-score - offset) / out_scaling
-    pf = 0.5 * (1.0 + p.sigmoid() - pm.sigmoid())
+    p = score
+    p_norm = (p - mean) / std
+    # q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
+    # qm = (-scorenet - offset) / in_scaling  # used to compute the chance of a loss
+    # qf = 0.5 * (1.0 + q.sigmoid() - qm.sigmoid())  # estimated match result (using win, loss and draw probs).
 
-    t = outcome
-    actual_lambda = self.start_lambda + (self.end_lambda - self.start_lambda) * (self.current_epoch / self.max_epoch)
-    pt = pf * actual_lambda + t * (1.0 - actual_lambda)
+    # p  = ( score - offset) / out_scaling
+    # pm = (-score - offset) / out_scaling
+    # pf = 0.5 * (1.0 + p.sigmoid() - pm.sigmoid())
 
-    loss = torch.pow(torch.abs(pt - qf), 2.5).mean()
+    # t = outcome
+    # actual_lambda = self.start_lambda + (self.end_lambda - self.start_lambda) * (self.current_epoch / self.max_epoch)
+    # pt = pf * actual_lambda + t * (1.0 - actual_lambda)
+
+    loss = torch.pow(torch.abs(p_norm - qf), 2).mean()
 
     self.log(loss_type, loss)
 
