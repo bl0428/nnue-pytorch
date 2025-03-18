@@ -302,6 +302,9 @@ class NNUE(pl.LightningModule):
     scorenet = self(us, them, white_indices, white_values, black_indices, black_values, psqt_indices, layer_stack_indices) * self.nnue2score
     qf = scorenet
 
+    mean = 0.022645641423111207
+    std = 0.052114194767384596
+
     p = score
     p_norm = (p - mean) / std
     # q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
