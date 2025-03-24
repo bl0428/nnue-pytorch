@@ -305,8 +305,8 @@ class NNUE(pl.LightningModule):
     mean = 0.022645641423111207
     std = 0.052114194767384596
 
-    p = score
-    p_norm = (p - mean) / std
+    p = score / 10
+    # p_norm = (p - mean) / std
     # q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
     # qm = (-scorenet - offset) / in_scaling  # used to compute the chance of a loss
     # qf = 0.5 * (1.0 + q.sigmoid() - qm.sigmoid())  # estimated match result (using win, loss and draw probs).
@@ -319,7 +319,7 @@ class NNUE(pl.LightningModule):
     # actual_lambda = self.start_lambda + (self.end_lambda - self.start_lambda) * (self.current_epoch / self.max_epoch)
     # pt = pf * actual_lambda + t * (1.0 - actual_lambda)
 
-    loss = torch.pow(torch.abs(p_norm - qf), 2).mean()
+    loss = torch.pow(torch.abs(p - qf), 2).mean()
 
     self.log(loss_type, loss)
 
