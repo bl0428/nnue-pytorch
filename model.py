@@ -146,10 +146,10 @@ class NNUE(pl.LightningModule):
     self.lr = lr
     self.param_index = param_index
 
-    self.nnue2score = 600.0
-    self.weight_scale_hidden = 64.0
-    self.weight_scale_out = 16.0
-    self.quantized_one = 127.0
+    self.nnue2score = 1.0 # change from 600.0 to 1.0
+    self.weight_scale_hidden = 1.0 # change from 60.0 to 1.0
+    self.weight_scale_out = 1.0 # change from 16.0 to 1.0
+    self.quantized_one = 127.0 # change from 127.0 to 1.0
 
     max_hidden_weight = self.quantized_one / self.weight_scale_hidden
     max_out_weight = (self.quantized_one * self.quantized_one) / (self.nnue2score * self.weight_scale_out)
@@ -302,11 +302,12 @@ class NNUE(pl.LightningModule):
     scorenet = self(us, them, white_indices, white_values, black_indices, black_values, psqt_indices, layer_stack_indices) * self.nnue2score
     qf = scorenet
 
-    mean = 0.022645641423111207
-    std = 0.052114194767384596
+    mean = 11.594568408632938
+    std = 26.682467720900913
 
-    p = score / 10
-    # p_norm = (p - mean) / std
+    p = score
+    p_norm = (p - mean) / std
+    p_norm = p_norm / 512
     # q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
     # qm = (-scorenet - offset) / in_scaling  # used to compute the chance of a loss
     # qf = 0.5 * (1.0 + q.sigmoid() - qm.sigmoid())  # estimated match result (using win, loss and draw probs).
@@ -319,7 +320,7 @@ class NNUE(pl.LightningModule):
     # actual_lambda = self.start_lambda + (self.end_lambda - self.start_lambda) * (self.current_epoch / self.max_epoch)
     # pt = pf * actual_lambda + t * (1.0 - actual_lambda)
 
-    loss = torch.pow(torch.abs(p - qf), 2).mean()
+    loss = torch.pow(torch.abs(p_norm - qf), 2).mean()
 
     self.log(loss_type, loss)
 
