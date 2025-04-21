@@ -192,6 +192,7 @@ def main():
       print(score)
       print('\n')
       print(scorenet)
+      print(f'loss: {torch.pow(torch.abs(p_norm - scorenet), 2).mean()}')
       break
     
     
