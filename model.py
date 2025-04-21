@@ -302,12 +302,11 @@ class NNUE(pl.LightningModule):
     scorenet = self(us, them, white_indices, white_values, black_indices, black_values, psqt_indices, layer_stack_indices) * self.nnue2score
     qf = scorenet
 
-    mean = 11.594568408632938
-    std = 26.682467720900913
+    mean = 0.022645641423111207
+    std = 0.052114194767384596
 
-    p = score
+    p = score / 512
     p_norm = (p - mean) / std
-    p_norm = p_norm / 512
     # q  = ( scorenet - offset) / in_scaling  # used to compute the chance of a win
     # qm = (-scorenet - offset) / in_scaling  # used to compute the chance of a loss
     # qf = 0.5 * (1.0 + q.sigmoid() - qm.sigmoid())  # estimated match result (using win, loss and draw probs).

@@ -173,9 +173,12 @@ def main():
     mean = 11.594568408632938
     std = 26.682467720900913
     
-    p_norm = score
+    # mean = 0.022645641423111207
+    # std = 0.052114194767384596
+
+    p_norm = score / 512
     p_norm = (p_norm - mean) / std
-    p_norm = p_norm / 512
+    # p_norm = p_norm / 512
     scorenet = nnue(us, them, white_indices, white_values, black_indices, black_values, psqt_indices, layer_stack_indices)
   
     loss = torch.pow(torch.abs(p_norm - scorenet), 2).mean()
