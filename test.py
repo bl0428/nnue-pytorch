@@ -181,8 +181,6 @@ def main():
     loss = torch.pow(torch.abs(p_norm - scorenet), 2).mean()
 
     print(f'loss: {loss}')
-
-    scorenet = scorenet * 26.6825 + 11.5946
     
     true.append(p_norm)
     predictions.append(scorenet)
