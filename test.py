@@ -14,6 +14,7 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 import copy
 import numpy as np
+import csv
 from feature_transformer import DoubleFeatureTransformerSlice
 
 def make_data_loaders(train_filenames, val_filenames, feature_set, num_workers, batch_size, filtered, random_fen_skipping, wld_filtered, early_fen_skipping, param_index, main_device, epoch_size, val_size):
@@ -161,17 +162,16 @@ def main():
     main_device,
     args.epoch_size,
     args.validation_size)
-    
-  true = []
-  predictions = []
-  losses = []
+  
+  csv_path = 'train_test_pred_voc.csv'
+
+  with open(csv_path, mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(['true', 'predicted'])
 
   i = 0
   for batch in iter(train):
     us, them, white_indices, white_values, black_indices, black_values, outcome, score, psqt_indices, layer_stack_indices = batch
-  
-    # mean = 11.594568408632938
-    # std = 26.682467720900913
     
     mean = 0.022645641423111207
     std = 0.052114194767384596
@@ -183,41 +183,21 @@ def main():
   
     loss = torch.pow(torch.abs(p_norm - scorenet), 2).mean()
 
-    print(f'loss: {loss}')
-    
-    true.append(p_norm)
-    predictions.append(scorenet)
-    losses.append(loss)
+    # Convert to NumPy arrays
+    true_np = p_norm.detach().cpu().numpy().flatten()
+    pred_np = scorenet.detach().cpu().numpy().flatten()
+
+    # Write to CSV
+    with open(csv_path, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        for t, p in zip(true_np, pred_np):
+            writer.writerow([t, p])
+  
     torch.cuda.empty_cache()
 
-    i = i + 1
-    if i > 50:
-      print(score)
-      print('\n')
-      print(scorenet)
-      print(f'loss: {torch.pow(torch.abs(p_norm - scorenet), 2).mean()}')
-      break
-    
-    
-    # true.append(p_norm)
-  
-    # losses.append(loss)
-
-  # predictions = predictions * 512 * 26.6825 + 11.5946
-
-  # Convert tensors to numpy arrays
-  true_np = torch.cat(true).cpu().numpy().flatten()
-  pred_np = torch.cat(predictions).detach().cpu().numpy().flatten()
-
-  # Compute correlation coefficient
-  corr_matrix = np.corrcoef(true_np, pred_np)
-  corr_coef = corr_matrix[0, 1]
-  print(f'Correlation coefficient: {corr_coef:.4f}')
-
-  # Compute RMSE
-  rmse = np.sqrt(np.mean((true_np - pred_np) ** 2))
-  print(f'RMSE: {rmse:.4f}')
-    
+    if len(true_np) > 1000000:
+        break
+      
       
 
 if __name__ == '__main__':
