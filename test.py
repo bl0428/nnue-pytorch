@@ -163,7 +163,8 @@ def main():
     args.epoch_size,
     args.validation_size)
   
-  csv_path = 'train_test_pred_voc.csv'
+  # output csv path
+  csv_path = 'pred_true_voc.csv'
 
   with open(csv_path, mode='w', newline='') as file:
     writer = csv.writer(file)
@@ -178,25 +179,21 @@ def main():
 
     p_norm = score / 512
     p_norm = (p_norm - mean) / std
-    # p_norm = p_norm / 512
     scorenet = nnue(us, them, white_indices, white_values, black_indices, black_values, psqt_indices, layer_stack_indices)
   
     loss = torch.pow(torch.abs(p_norm - scorenet), 2).mean()
 
-    # Convert to NumPy arrays
+    # convert tensors to numpy arrays
     true_np = p_norm.detach().cpu().numpy().flatten()
     pred_np = scorenet.detach().cpu().numpy().flatten()
 
-    # Write to CSV
+    # write to csv file
     with open(csv_path, mode='a', newline='') as file:
         writer = csv.writer(file)
         for t, p in zip(true_np, pred_np):
             writer.writerow([t, p])
   
     torch.cuda.empty_cache()
-
-    if len(true_np) > 1000000:
-        break
       
       
 
